@@ -112,5 +112,21 @@ offset = pe_header_ptr + 3
 -- Get stuff from the COFF header
 machine_type = read_le(program, offset, 2)
 offset = offset+2
+amount_of_sections = read_le(program, offset, 2)
+offset = offset+2
 timestamp = read_le(program, offset, 4)
+offset = offset+8
+amount_of_symbols = read_le(program, offset, 4)
 offset = offset+4
+optional_header_size = read_le(program, offset, 2)
+offset = offset+2
+characteristics = read_le(program, offset, 2)
+offset = offset+2
+
+-- Stuff
+if optional_header_size == 0 then
+    pe_type = "Object code"
+end
+print(read_le(program, offset, 2))
+
+--print(os.date(nil, timestamp))
