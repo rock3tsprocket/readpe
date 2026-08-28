@@ -85,6 +85,23 @@ CHARACTERISTICS[0x2000] = "DLL"
 CHARACTERISTICS[0x4000] = "UP_SYSTEM_ONLY"
 CHARACTERISTICS[0x8000] = "BYTES_REVERSED_HI"
 
+DLL_CHARACTERISTICS = {}
+DLL_CHARACTERISTICS[0x1] = "Reserved (0x1)"
+DLL_CHARACTERISTICS[0x2] = "Reserved (0x2)"
+DLL_CHARACTERISTICS[0x4] = "Reserved (0x4)"
+DLL_CHARACTERISTICS[0x8] = "Reserved (0x8)"
+DLL_CHARACTERISTICS[0x20] = "HIGHENTROPY_VA"
+DLL_CHARACTERISTICS[0x40] = "DYNAMIC_BASE"
+DLL_CHARACTERISTICS[0x80] = "FORCE_INTEGRITY"
+DLL_CHARACTERISTICS[0x100] = "NX_COMPAT"
+DLL_CHARACTERISTICS[0x200] = "NO_ISOLATION"
+DLL_CHARACTERISTICS[0x400] = "NO_SEH"
+DLL_CHARACTERISTICS[0x800] = "NO_BIND"
+DLL_CHARACTERISTICS[0x1000] = "APPCONTAINER"
+DLL_CHARACTERISTICS[0x2000] = "WDM_DRIVER"
+DLL_CHARACTERISTICS[0x4000] = "GUARD_CF"
+DLL_CHARACTERISTICS[0x8000] = "TERMINAL_SERVER_AWARE"
+
 SUBSYSTEMS = {}
 SUBSYSTEMS[0] = "UNKNOWN"
 SUBSYSTEMS[1] = "NATIVE"
@@ -167,7 +184,7 @@ else
     offset = offset+2
 
     -- Get stuff from the optional header
-    linker_version = { read_le(program, offset, 1),
+    linker_ver = { read_le(program, offset, 1),
                        read_le(program, offset+1, 1) }
     offset = offset+2
     size_of_code = read_le(program, offset, 4)
@@ -182,11 +199,68 @@ else
 
     if optional_header == 0x010b then
         pe_type = "PE32"
+        
+        base_of_data = read_le(program, offset, 4)
+        offset = offset+4
+        image_base = read_le(program, offset, 4)
+        offset = offset+4
     elseif optional_header == 0x020b then
         pe_type = "PE32+"
+        
+        image_base = read_le(program, offset, 8)
+        offset = offset+8
     else
         pe_type = "Unknown"
     end
+
+    section_align = read_le(program, offset, 4)
+    offset = offset+4
+    file_align = read_le(program, offset, 4)
+    offset = offset+4
+    os_ver = { read_le(program, offset, 2), read_le(program, offset+2, 2) }
+    offset = offset+4
+    image_ver = { read_le(program, offset, 2), read_le(program, offset+2, 2) }
+    offset = offset+4
+    subsystem_ver = { read_le(program, offset, 2), read_le(program, offset+2, 2) }
+    offset = offset+4
+    win32_ver = read_le(program, offset, 4)
+    offset = offset+4
+    image_size = read_le(program, offset, 4)
+    offset = offset+4
+    header_size = read_le(program, offset, 4)
+    offset = offset+4
+    checksum = read_le(program, offset, 4)
+    offset = offset+4
+    subsystem = read_le(program, offset, 2)
+    offset = offset+2
+    dll_characteristics = read_le(program, offset, 2)
+    offset = offset+2
+
+    if optional_header == 0x010b then -- PE32
+        stack_reserve_size = read_le(program, offset, 4)
+        offset = offset+4
+        stack_commit_size = read_le(program, offset, 4)
+        offset = offset+4
+        heap_reserve_size = read_le(program, offset, 4)
+        offset = offset+4
+        heap_commit_size = read_le(program, offset, 4)
+        offset = offset+4
+    elseif optional_header == 0x020b then -- PE32+
+        stack_reserve_size = read_le(program, offset, 8)
+        offset = offset+8
+        stack_commit_size = read_le(program, offset, 8)
+        offset = offset+8
+        heap_reserve_size = read_le(program, offset, 8)
+        offset = offset+8
+        heap_commit_size = read_le(program, offset, 8)
+        offset = offset+8
+    end
+
+    loader_flags = read_le(program, offset, 4)
+    offset = offset+4
+    --amount_and_size_of_rva = read_le(program, offset, 4)
+    offset = offset+4
+
 end
 
 
@@ -201,10 +275,15 @@ print("  Symbol table pointer: "..string.format("0x%X", symbol_table_ptr))
 print("  Amount of symbols: "..amount_of_symbols)
 print("  PE type: "..pe_type)
 io.stdout:write("  Characteristics: ")
-for characteristic,characteristic_str in ipairs(CHARACTERISTICS) do
-    if bit32.band(i, characteristics) then
-        io.stdout:write(characteristic_str .. " ")
+if characteristics == 0 then
+    print("None\n")
+else
+    for characteristic,characteristic_str in ipairs(CHARACTERISTICS) do
+        if bit32.band(i, characteristics) then
+            io.stdout:write(characteristic_str .. " ")
+        end
     end
+    print("\n")
 end
 
 -- Exit if the file is object code, otherwise continue with the optional header
@@ -212,12 +291,40 @@ if optional_header_size == 0 then
     return
 end
 
-print("\n")
-
 print("Optional header:")
-print("  Linker version: "..linker_version[1].."."..linker_version[2])
+print("  Linker version: "..linker_ver[1].."."..linker_ver[2])
 print("  Size of code: "..size_of_code.."B")
 print("  Size of initialized data: "..size_of_init_data.."B")
 print("  Size of uninitialized data: "..size_of_uninit_data.."B")
 print("  Entrypoint address: "..string.format("0x%X", entry_point_addr))
 print("  Base of code: "..string.format("0x%X", base_of_code))
+if optional_header == 0x010b then
+    print("  Base of data: "..string.format("0x%X", base_of_data))
+end
+print("  Image base: "..string.format("0x%X", image_base))
+print("  Section alignment: "..string.format("0x%X", section_align))
+print("  File alignment: "..string.format("0x%X", file_align))
+print("  OS version: "..os_ver[1].."."..os_ver[2])
+print("  Image version: "..image_ver[1].."."..image_ver[2])
+print("  Subsystem version: "..subsystem_ver[1].."."..subsystem_ver[2])
+print("  Win32 version value: "..win32_ver..(win32_ver == 0 and "" or " (!)"))
+print("  Image size: "..image_size.."B")
+print("  Header size: "..header_size.."B")
+print("  Checksum: "..string.format("0x%X", checksum))
+print("  Subsystem: "..SUBSYSTEMS[subsystem].. " ("..subsystem..")")
+io.stdout:write("  DLL characteristics: ")
+if dll_characteristics == 0 then
+    print("None")
+else
+    for characteristic,characteristic_str in ipairs(DLL_CHARACTERISTICS) do
+        if bit32.band(i, dll_characteristics) then
+            io.stdout:write(characteristic_str .. " ")
+        end
+    end
+    print("")
+end
+print("  Stack reserve size: "..string.format("0x%X", stack_reserve_size))
+print("  Stack commit size: "..string.format("0x%X", stack_commit_size))
+print("  Heap reserve size: "..string.format("0x%X", heap_reserve_size))
+print("  Heap commit size: "..string.format("0x%X", heap_commit_size))
+print("  Loader flags: "..loader_flags..(loader_flags == 0 and "" or " (!)"))
