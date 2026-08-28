@@ -263,7 +263,6 @@ else
 
 end
 
-
 -- Print the data
 
 print("PE header:")
@@ -312,10 +311,12 @@ print("  Image size: "..image_size.."B")
 print("  Header size: "..header_size.."B")
 print("  Checksum: "..string.format("0x%X", checksum))
 print("  Subsystem: "..SUBSYSTEMS[subsystem].. " ("..subsystem..")")
-io.stdout:write("  DLL characteristics: ")
-if dll_characteristics == 0 then
-    print("None")
+if bit32.band(characteristics, 0x2000) == 0 then
+    -- Do nothing
+elseif dll_characteristics == 0 then
+    print("  DLL characteristics: None")
 else
+    io.stdout:write("  DLL characteristics: ")
     for characteristic,characteristic_str in ipairs(DLL_CHARACTERISTICS) do
         if bit32.band(i, dll_characteristics) then
             io.stdout:write(characteristic_str .. " ")
