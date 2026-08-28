@@ -157,16 +157,57 @@ offset = offset+2
 characteristics = read_le(program, offset, 2)
 offset = offset+2
 
--- Stuff
+-- Check for the optional header type
 if optional_header_size == 0 then
     pe_type = "Object code"
 else
     optional_header = read_le(program, offset, 2)
+    offset = offset+2
+
+    -- Get stuff from the optional header
+    linker_version = { read_le(program, offset, 1),
+                       read_le(program, offset+1, 1) }
+    offset = offset+2
+    size_of_code = read_le(program, offset, 4)
+    offset = offset+4
+    size_of_init_data = read_le(program, offset, 4)
+    size_of_uninit_data = read_le(program, offset, 4)
+    offset = offset+8
+    entry_point_addr = read_le(program, offset, 4)
+    offset = offset+4
+    base_of_code = read_le(program, offset, 4)
+    offset = offset+4
+
     if optional_header == 0x010b then
         pe_type = "PE32"
     elseif optional_header == 0x020b then
         pe_type = "PE32+"
+    else
+        pe_type = "Unknown"
     end
 end
 
+
+-- Print the data
+
+print("PE header:")
+print("  File format: PE")
+print("  Machine type: "..MACHINE_TYPES[machine_type])
+print("  Amount of sections: "..amount_of_sections)
+print("  Creation date: "..os.date(nil, timestamp))
+print("  Amount of symbols: "..amount_of_symbols)
+print("  PE type: "..pe_type)
+io.stdout:write("  Characteristics: ")
+for characteristic,characteristic_str in ipairs(CHARACTERISTICS) do
+    if bit32.band(i, characteristics) then
+        io.stdout:write(characteristic_str .. " ")
+    end
+end
+
+-- Exit if the file is object code, otherwise continue with the optional header
+if optional_header_size == 0 then
+    return
+end
+
+print("\n")
 
