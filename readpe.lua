@@ -277,8 +277,8 @@ io.stdout:write("  Characteristics: ")
 if characteristics == 0 then
     print("None\n")
 else
-    for characteristic,characteristic_str in ipairs(CHARACTERISTICS) do
-        if bit32.band(i, characteristics) then
+    for characteristic,characteristic_str in pairs(CHARACTERISTICS) do
+        if bit32.band(characteristic, characteristics) == characteristic then
             io.stdout:write(characteristic_str .. " ")
         end
     end
@@ -317,8 +317,8 @@ elseif dll_characteristics == 0 then
     print("  DLL characteristics: None")
 else
     io.stdout:write("  DLL characteristics: ")
-    for characteristic,characteristic_str in ipairs(DLL_CHARACTERISTICS) do
-        if bit32.band(i, dll_characteristics) then
+    for characteristic,characteristic_str in pairs(DLL_CHARACTERISTICS) do
+        if bit32.band(characteristic, dll_characteristics) == characteristic then
             io.stdout:write(characteristic_str .. " ")
         end
     end
