@@ -30,7 +30,7 @@ bit32 = require("bit32")
 
 -- Constants, like, a lot of constants
 -- I'm not sure of a better way to do this
--- (https://learn.microsoft.com/en-us/windows/win32/debug/pe-format#machine-types)
+-- (https://learn.microsoft.com/en-us/windows/win32/debug/pe-format)
 MACHINE_TYPES = {}
 MACHINE_TYPES[0] = "UNKNOWN"
 MACHINE_TYPES[0x184] = "ALPHA"
@@ -66,6 +66,40 @@ MACHINE_TYPES[0x1A6] = "SH4"
 MACHINE_TYPES[0x1A8] = "SH5"
 MACHINE_TYPES[0x1C2] = "THUMB"
 MACHINE_TYPES[0x169] = "WCEMIPSV2"
+
+CHARACTERISTICS = {}
+CHARACTERISTICS[0x1] = "RELOCS_STRIPPED"
+CHARACTERISTICS[0x2] = "EXECUTABLE_IMAGE"
+CHARACTERISTICS[0x4] = "LINE_NUMS_STRIPPED"
+CHARACTERISTICS[0x8] = "LOCAL_SYMS_STRIPPED"
+CHARACTERISTICS[0x10] = "AGGRESSIVE_WS_TRIM"
+CHARACTERISTICS[0x20] = "LARGE_ADDRESS_AWARE"
+CHARACTERISTICS[0x40] = "Reserved"
+CHARACTERISTICS[0x80] = "BYTES_REVERSED_LO"
+CHARACTERISTICS[0x100] = "32BIT_MACHINE"
+CHARACTERISTICS[0x200] = "DEBUG_STRIPPED"
+CHARACTERISTICS[0x400] = "REMOVABLE_RUN_FROM_SWAP"
+CHARACTERISTICS[0x800] = "NET_RUN_FROM_SWAP"
+CHARACTERISTICS[0x1000] = "SYSTEM"
+CHARACTERISTICS[0x2000] = "DLL"
+CHARACTERISTICS[0x4000] = "UP_SYSTEM_ONLY"
+CHARACTERISTICS[0x8000] = "BYTES_REVERSED_HI"
+
+SUBSYSTEMS = {}
+SUBSYSTEMS[0] = "UNKNOWN"
+SUBSYSTEMS[1] = "NATIVE"
+SUBSYSTEMS[2] = "WINDOWS_GUI"
+SUBSYSTEMS[3] = "WINDOWS_CUI"
+SUBSYSTEMS[5] = "OS2_CUI"
+SUBSYSTEMS[7] = "POSIX_CUI"
+SUBSYSTEMS[8] = "NATIVE_WINDOWS"
+SUBSYSTEMS[9] = "WINDOWS_CE_GUI"
+SUBSYSTEMS[10] = "EFI_APPLICATION"
+SUBSYSTEMS[11] = "EFI_BOOT_SERVICE_DRIVER"
+SUBSYSTEMS[12] = "EFI_RUNTIME_DRIVER"
+SUBSYSTEMS[13] = "EFI_ROM"
+SUBSYSTEMS[14] = "XBOX"
+SUBSYSTEMS[16] = "WINDOWS_BOOT_APPLICATION"
 -- End of constants
 
 
@@ -126,7 +160,13 @@ offset = offset+2
 -- Stuff
 if optional_header_size == 0 then
     pe_type = "Object code"
+else
+    optional_header = read_le(program, offset, 2)
+    if optional_header == 0x010b then
+        pe_type = "PE32"
+    elseif optional_header == 0x020b then
+        pe_type = "PE32+"
+    end
 end
-print(read_le(program, offset, 2))
 
---print(os.date(nil, timestamp))
+
