@@ -149,7 +149,9 @@ offset = offset+2
 amount_of_sections = read_le(program, offset, 2)
 offset = offset+2
 timestamp = read_le(program, offset, 4)
-offset = offset+8
+offset = offset+4
+symbol_table_ptr = read_le(program, offset, 4)
+offset = offset+4
 amount_of_symbols = read_le(program, offset, 4)
 offset = offset+4
 optional_header_size = read_le(program, offset, 2)
@@ -194,7 +196,8 @@ print("PE header:")
 print("  File format: PE")
 print("  Machine type: "..MACHINE_TYPES[machine_type])
 print("  Amount of sections: "..amount_of_sections)
-print("  Creation date: "..os.date(nil, timestamp))
+print("  Timestamp: "..os.date(nil, timestamp))
+print("  Symbol table pointer: "..string.format("0x%X", symbol_table_ptr))
 print("  Amount of symbols: "..amount_of_symbols)
 print("  PE type: "..pe_type)
 io.stdout:write("  Characteristics: ")
@@ -211,3 +214,10 @@ end
 
 print("\n")
 
+print("Optional header:")
+print("  Linker version: "..linker_version[1].."."..linker_version[2])
+print("  Size of code: "..size_of_code.."B")
+print("  Size of initialized data: "..size_of_init_data.."B")
+print("  Size of uninitialized data: "..size_of_uninit_data.."B")
+print("  Entrypoint address: "..string.format("0x%X", entry_point_addr))
+print("  Base of code: "..string.format("0x%X", base_of_code))
