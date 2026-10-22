@@ -267,7 +267,11 @@ end
 
 print("PE header:")
 print("  File format: PE")
-print("  Machine type: "..MACHINE_TYPES[machine_type])
+if MACHINE_TYPES[machine_type] then
+    print("  Machine type: "..MACHINE_TYPES[machine_type])
+else
+    print("  Machine type: "..string.format("0x%X", machine_type))
+end
 print("  Amount of sections: "..amount_of_sections)
 print("  Timestamp: "..os.date(nil, timestamp))
 print("  Symbol table pointer: "..string.format("0x%X", symbol_table_ptr))
@@ -310,7 +314,11 @@ print("  Win32 version value: "..win32_ver..(win32_ver == 0 and "" or " (!)"))
 print("  Image size: "..image_size.."B")
 print("  Header size: "..header_size.."B")
 print("  Checksum: "..string.format("0x%X", checksum))
-print("  Subsystem: "..SUBSYSTEMS[subsystem].. " ("..subsystem..")")
+if SUBSYSTEMS[subsystem] then
+    print("  Subsystem: "..SUBSYSTEMS[subsystem].. " ("..subsystem..")")
+else
+    print("  Subsystem: "..subsystem)
+end
 if bit32.band(characteristics, 0x2000) == 0 then
     -- Do nothing
 elseif dll_characteristics == 0 then
