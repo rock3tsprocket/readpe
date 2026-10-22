@@ -26,8 +26,6 @@
  TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
  THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. ]]
 
-bit32 = require("bit32")
-
 -- Constants, like, a lot of constants
 -- I'm not sure of a better way to do this
 -- (https://learn.microsoft.com/en-us/windows/win32/debug/pe-format)
@@ -125,7 +123,7 @@ function read_le(binary, offset, count)
     data = 0
     i=count-1
     while i >= 0 do
-    	data = bit32.bor(data, bit32.lshift(string.byte(binary, offset+i+1, offset+i+1), 8*i))
+        data = data | (string.byte(binary, offset+i+1, offset+i+1) << 8*i)
     	i=i-1
     end
     return data
@@ -282,7 +280,7 @@ if characteristics == 0 then
     print("None\n")
 else
     for characteristic,characteristic_str in pairs(CHARACTERISTICS) do
-        if bit32.band(characteristic, characteristics) == characteristic then
+        if characteristic & characteristics == characteristic then
             io.stdout:write(characteristic_str .. " ")
         end
     end
@@ -319,14 +317,14 @@ if SUBSYSTEMS[subsystem] then
 else
     print("  Subsystem: "..subsystem)
 end
-if bit32.band(characteristics, 0x2000) == 0 then
+if characteristics & 0x2000 == 0 then
     -- Do nothing
 elseif dll_characteristics == 0 then
     print("  DLL characteristics: None")
 else
     io.stdout:write("  DLL characteristics: ")
     for characteristic,characteristic_str in pairs(DLL_CHARACTERISTICS) do
-        if bit32.band(characteristic, dll_characteristics) == characteristic then
+        if characteristic & dll_characteristics == characteristic then
             io.stdout:write(characteristic_str .. " ")
         end
     end
