@@ -188,8 +188,9 @@ else
     size_of_code = read_le(program, offset, 4)
     offset = offset+4
     size_of_init_data = read_le(program, offset, 4)
+    offset = offset+4
     size_of_uninit_data = read_le(program, offset, 4)
-    offset = offset+8
+    offset = offset+4
     entry_point_addr = read_le(program, offset, 4)
     offset = offset+4
     base_of_code = read_le(program, offset, 4)
