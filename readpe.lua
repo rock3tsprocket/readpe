@@ -265,7 +265,7 @@ end
 -- Print the data
 
 print("PE header:")
-print("  File format: PE")
+print("  File format: "..pe_type)
 if MACHINE_TYPES[machine_type] then
     print("  Machine type: "..MACHINE_TYPES[machine_type])
 else
@@ -275,7 +275,6 @@ print("  Amount of sections: "..amount_of_sections)
 print("  Timestamp: "..os.date(nil, timestamp))
 print("  Symbol table pointer: "..string.format("0x%X", symbol_table_ptr))
 print("  Amount of symbols: "..amount_of_symbols)
-print("  PE type: "..pe_type)
 io.stdout:write("  Characteristics: ")
 if characteristics == 0 then
     print("None\n")
